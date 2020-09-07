@@ -105,7 +105,7 @@ const userValidator = [
 ]
 
 // Create User
-router.post('/users', userValidator, asyncHandler(async (req, res, next) => {
+router.post('/users', userValidator, asyncHandler( async (req, res, next) => {
 
     const errors = validationResult(req);
 
@@ -116,7 +116,8 @@ router.post('/users', userValidator, asyncHandler(async (req, res, next) => {
 
         // Return the validation errors to the client.
         return res.status(400).json({ errors: errorMessages });
-    } else {
+    }
+
         // Get the user from the request body.
         const user = req.body;
 
@@ -127,7 +128,8 @@ router.post('/users', userValidator, asyncHandler(async (req, res, next) => {
 
         // Set the status to 201 Created and end the response.
         return res.status(201).json({ msg: "yay!" }).end();
-    }
+
+
 
 }));
 
@@ -142,7 +144,7 @@ router.get('/courses', async (req, res) => {
 
 
 // GET /api/courses/:id 200 - Returns the course (including the user that owns the course) for the provided course ID
-router.get('/courses/:id', asyncHandler( async (req, res) => {
+router.get('/courses/:id', asyncHandler(async (req, res) => {
 
     const courseId = req.params.id;
     const course = await Course.findByPk(courseId);
@@ -150,7 +152,7 @@ router.get('/courses/:id', asyncHandler( async (req, res) => {
         res.status(200).json(course)
 
     } else {
-        res.status(400).json({message: "Course not found"})
+        res.status(400).json({ message: "Course not found" })
     }
 
 
@@ -162,7 +164,7 @@ const courseValidator = [
     .withMessage("please put a title."),
     check('description')
     .exists({ checkNull: true, checkFalsy: true })
-    .withMessage("please put an email")
+    .withMessage("please put an Description")
 ]
 
 // POST /api/courses 201 - Creates a course, sets the Location header to the URI for the course, and returns no content
