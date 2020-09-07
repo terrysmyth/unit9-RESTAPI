@@ -150,10 +150,10 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
     const courseId = req.params.id;
     const course = await Course.findByPk(courseId);
     if (course) {
-        res.status(200).json(course)
+        res.status(200).json(course).end();
 
     } else {
-        res.status(400).json({ message: "Course not found" })
+        res.status(400).json({ message: "Course not found" }).end();
     }
 
 
@@ -184,7 +184,7 @@ router.post('/courses', courseValidator, authenticateUser, asyncHandler(async (r
         // Return the validation errors to the client.
         console.log("Whatr22?")
 
-        return res.status(400).json({ errors: errorMessages });
+        return res.status(400).json({ errors: errorMessages }).end();
     } else {
         // Get the user from the request body.
         console.log("Whatr?333")
