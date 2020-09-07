@@ -86,6 +86,8 @@ router.get('/users', authenticateUser, async (req, res) => {
 
 })
 
+
+// Validate user information and check email is email.
 const userValidator = [
     check('firstName')
     .exists({ checkNull: true, checkFalsy: true })
@@ -134,7 +136,6 @@ router.post('/users', userValidator, asyncHandler( async (req, res, next) => {
 }));
 
 // GET /api/courses 200 - Returns a list of courses (including the user that owns each course)
-
 router.get('/courses', async (req, res) => {
 
     const courses = await Course.findAll();
@@ -158,6 +159,8 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 
 }));
 
+
+// Validate Course information.
 const courseValidator = [
     check('title')
     .exists({ checkNull: true, checkFalsy: true })
@@ -217,9 +220,9 @@ router.put('/courses/:id', courseValidator, authenticateUser, asyncHandler(async
 
         if (user.id === course.userId) {
             await course.update(req.body);
-            res.status(204).json({ message: "updated" });
+            res.status(204).json({ message: "updated" }).end();
         } else {
-            res.status(400);
+            return res.status(400).json({message: "This user cannot edit this course"}).end();
         }
     }
 
@@ -235,10 +238,10 @@ router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res, ne
     const course = await Course.findByPk(courseId);
 
     if (user.id === course.userId) {
-        course.destroy();
-        res.status(204).json({ message: "Course Deleted" });
+        await course.destroy();
+        res.status(204).json({ message: "Course Deleted" }).end();
     } else {
-        res.status(400).json({ message: "User doesnt have authority" })
+        res.status(400).json({ message: "User doesnt have authority" }).end();
     }
 
 
