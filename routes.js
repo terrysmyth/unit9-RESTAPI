@@ -76,8 +76,9 @@ router.get('/users', authenticateUser, async (req, res) => {
         const user = await req.currentUser;
 
         res.json({
-            name: user.firstName,
-            username: user.lastName,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            emailAddress: user.emailAddress,
         });
     } catch (err) {
         console.log(err)
@@ -107,7 +108,7 @@ const userValidator = [
 ]
 
 // Create User
-router.post('/users', userValidator, asyncHandler( async (req, res, next) => {
+router.post('/users', userValidator, asyncHandler(async (req, res, next) => {
 
     const errors = validationResult(req);
 
@@ -120,35 +121,54 @@ router.post('/users', userValidator, asyncHandler( async (req, res, next) => {
         return res.status(400).json({ errors: errorMessages });
     }
 
-        // Get the user from the request body.
-        const user = req.body;
+    // Get the user from the request body.
+    const user = req.body;
 
-        // encrypt password plz
-        user.password = bcryptjs.hashSync(user.password);
+    // encrypt password plz
+    user.password = bcryptjs.hashSync(user.password);
 
-        await User.create(user);
+    await User.create(user);
 
-        // Set the status to 201 Created and end the response.
-        return res.status(201).json({ msg: "yay!" }).end();
+    res.location('/');
+    // Set the status to 201 Created and end the response.
+    return res.status(201).end();
 
 
 
 }));
 
 // GET /api/courses 200 - Returns a list of courses (including the user that owns each course)
-router.get('/courses', async (req, res) => {
-
-    const courses = await Course.findAll();
-    res.json(courses);
-
-})
+router.get('/courses', asyncHandler(async (req, res, next) => {
+    const courses = await Course.findAll({
+        include: [
+            {
+                model: User,
+                as: 'user',
+                attributes: { exclude: ['password','createdAt', 'updatedAt'] }
+            }
+        ],
+        attributes: { exclude: ['createdAt', 'updatedAt'] }
+    });
+    console.log(courses);
+    res.json( courses );
+}));
 
 
 // GET /api/courses/:id 200 - Returns the course (including the user that owns the course) for the provided course ID
 router.get('/courses/:id', asyncHandler(async (req, res) => {
 
     const courseId = req.params.id;
-    const course = await Course.findByPk(courseId);
+    const course = await Course.findByPk(courseId, {
+        include: [
+            {
+                model: User,
+                as: 'user',
+                attributes: { exclude: ['password','createdAt', 'updatedAt'] }
+            }
+        ],
+        attributes: { exclude: ['createdAt', 'updatedAt'] }
+    });
+
     if (course) {
         res.status(200).json(course).end();
 
@@ -176,26 +196,24 @@ router.post('/courses', courseValidator, authenticateUser, asyncHandler(async (r
 
     const errors = validationResult(req);
     let user = req.currentUser;
-    console.log("Whatr?")
     // If there are validation errors...
     if (!errors.isEmpty()) {
         // Use the Array `map()` method to get a list of error messages.
         const errorMessages = errors.array().map(error => error.msg);
         // Return the validation errors to the client.
-        console.log("Whatr22?")
 
         return res.status(400).json({ errors: errorMessages }).end();
     } else {
         // Get the user from the request body.
-        console.log("Whatr?333")
 
         let course = req.body;
         course.userId = user.id;
 
         course = await Course.create(course);
 
+        res.location('/courses/' + course.id);
         // Set the status to 201 Created and end the response.
-        return res.status(201).json({ msg: "Course created" }).end();
+        return res.status(201).end();
     }
 
 
@@ -222,7 +240,7 @@ router.put('/courses/:id', courseValidator, authenticateUser, asyncHandler(async
             await course.update(req.body);
             res.status(204).json({ message: "updated" }).end();
         } else {
-            return res.status(400).json({message: "This user cannot edit this course"}).end();
+            return res.status(400).json({ message: "This user cannot edit this course" }).end();
         }
     }
 
@@ -239,7 +257,7 @@ router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res, ne
 
     if (user.id === course.userId) {
         await course.destroy();
-        res.status(204).json({ message: "Course Deleted" }).end();
+        res.status(204).end();
     } else {
         res.status(400).json({ message: "User doesnt have authority" }).end();
     }

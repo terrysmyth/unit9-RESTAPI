@@ -31,6 +31,7 @@ module.exports = (sequelize) => {
     // BOTH SIDES OF THE RELATIONSHIP NEED TO BE THE SAME!
     Course.associate = (models) => {
         Course.belongsTo(models.User, {
+            as: 'user',
             foreignKey: {
                 fieldName: 'userId',
                 allowNull: false,
